@@ -1,0 +1,24 @@
+[1.936s] Invoking command in '/home/rilbasestation02/sim_ws/src/safety_pkg': PYTHONPATH=/home/rilbasestation02/sim_ws/build/safety_pkg/prefix_override:/home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/safety_pkg build --build-base /home/rilbasestation02/sim_ws/build/safety_pkg/build install --record /home/rilbasestation02/sim_ws/build/safety_pkg/install.log --single-version-externally-managed
+[2.240s] running egg_info
+[2.240s] writing ../../build/safety_pkg/safety_pkg.egg-info/PKG-INFO
+[2.241s] writing dependency_links to ../../build/safety_pkg/safety_pkg.egg-info/dependency_links.txt
+[2.241s] writing entry points to ../../build/safety_pkg/safety_pkg.egg-info/entry_points.txt
+[2.241s] writing requirements to ../../build/safety_pkg/safety_pkg.egg-info/requires.txt
+[2.241s] writing top-level names to ../../build/safety_pkg/safety_pkg.egg-info/top_level.txt
+[2.289s] reading manifest file '../../build/safety_pkg/safety_pkg.egg-info/SOURCES.txt'
+[2.290s] writing manifest file '../../build/safety_pkg/safety_pkg.egg-info/SOURCES.txt'
+[2.290s] running build
+[2.291s] running build_py
+[2.291s] copying safety_pkg/safety.py -> /home/rilbasestation02/sim_ws/build/safety_pkg/build/lib/safety_pkg
+[2.292s] running install
+[2.292s] running install_lib
+[2.293s] copying /home/rilbasestation02/sim_ws/build/safety_pkg/build/lib/safety_pkg/safety.py -> /home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages/safety_pkg
+[2.294s] byte-compiling /home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages/safety_pkg/safety.py to safety.cpython-38.pyc
+[2.296s] running install_data
+[2.296s] running install_egg_info
+[2.299s] removing '/home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages/safety_pkg-0.0.0-py3.8.egg-info' (and everything under it)
+[2.300s] Copying ../../build/safety_pkg/safety_pkg.egg-info to /home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages/safety_pkg-0.0.0-py3.8.egg-info
+[2.301s] running install_scripts
+[2.322s] Installing safety script to /home/rilbasestation02/sim_ws/install/safety_pkg/lib/safety_pkg
+[2.323s] writing list of installed files to '/home/rilbasestation02/sim_ws/build/safety_pkg/install.log'
+[2.464s] Invoked command in '/home/rilbasestation02/sim_ws/src/safety_pkg' returned '0': PYTHONPATH=/home/rilbasestation02/sim_ws/build/safety_pkg/prefix_override:/home/rilbasestation02/sim_ws/install/safety_pkg/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/safety_pkg build --build-base /home/rilbasestation02/sim_ws/build/safety_pkg/build install --record /home/rilbasestation02/sim_ws/build/safety_pkg/install.log --single-version-externally-managed
