@@ -13,6 +13,8 @@ class WallFollowNode(Node):
         super().__init__('wall_follow')
         
         self.velocity_x = 0.0
+        self.pid_i = 0.0
+        self.previous_error = 0.0
 
         self.subscription = self.create_subscription(
             LaserScan,
@@ -40,9 +42,9 @@ class WallFollowNode(Node):
 
     def __speed_control__(self, steering_angle):
         speed = 0.0
-        if steering_angle >= 0 and steering_angle < 10:
-            speed = 1.5
-        elif steering_angle >= 10 and steering_angle < 20:
+        if steering_angle >= 0 and steering_angle < 0.18:
+            speed = 1.5 
+        elif steering_angle >= 0.18 and steering_angle < 0.35:
             speed = 1.0
         else:
             speed = 0.5
@@ -50,23 +52,47 @@ class WallFollowNode(Node):
 
     def __steering_angle_control__(self, scan_data):
         ranges = scan_data.ranges
-        angle_max = 2.3499999046325684
-        angle_min = -angle_max
-        l = self.velocity_x*0.25
+        angle_increment = scan_data.angle_increment
+        time = 2
+        l = self.velocity_x*time
 
-        a_range = 419
-        b_range = 177
-        a_distance = range[a_range]
-        b_distance = range[b_range]
+        a_range = len(ranges) - 419
+        b_range = len(ranges) - 177
+        a_distance = ranges[a_range]
+        b_distance = ranges[b_range]
         # dt_distance = min(ranges)
-        theta = (abs(angle_max)+abs(angle_min))/len(ranges) * (a_range - b_range)
+        self.get_logger().info(f"a_distance:{a_distance} a_range: {a_range}")
+
+        theta = angle_increment * abs(a_range - b_range)
         
-        alpha = 1/(math.tan((a_distance*math.cos(theta) - b_distance)/a_distance*math.sin(theta)))
+        alpha = (math.atan((a_distance*math.cos(theta) - b_distance)/a_distance*math.sin(theta)))
 
         dt_distance = b_distance*math.cos(alpha)
-
         dt_distance_1 = dt_distance + l*math.sin(alpha)
 
+        desired_distance = 0.4
+        error = desired_distance - dt_distance_1
+
+        #PID
+        kp = 0.3
+        ki = 0
+        kd = 0
+
+        pid_p = kp*error
+        pid_d = kd * (error - self.previous_error)/time
+        
+        if (-3 < error and error < 3):
+            self.pid_i = self.pid_i + (ki * error)
+        else:
+            self.pid_i = 0
+
+        steering_angle = pid_p + self.pid_i + pid_d
+
+        self.previous_error = error
+
+        # self.get_logger().info(f"a_distance:{a_distance} error: {error}, angle: {steering_angle}")
+
+        return steering_angle
 
 def main(args=None):
     rclpy.init(args=args)
