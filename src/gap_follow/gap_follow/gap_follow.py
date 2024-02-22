@@ -64,7 +64,8 @@ class ReactiveFollowGap(Node):
         1.Setting each value to the mean over some window
         2.Rejecting high values (eg. > 5m)
         """
-        # plt.plot(range(len(scan_data.ranges)), (scan_data.ranges), label="lidar raw")
+        plt.figure()
+        plt.plot(range(len(scan_data.ranges)), (scan_data.ranges), label="lidar raw")
 
         initial_fov = int(
             self.__to_radians__(134 - self.fov_angle) / scan_data.angle_increment
@@ -72,8 +73,9 @@ class ReactiveFollowGap(Node):
         end_fov = int(
             self.__to_radians__(134 + self.fov_angle) / scan_data.angle_increment
         )
-        proc_ranges = scan_data.ranges[initial_fov:end_fov]
-
+        proc_ranges = scan_data.ranges[initial_fov:end_fov] # TO UNCOMMENT
+        
+        # #PLOT    
         # all_zeros = np.ones_like(scan_data.ranges)
         # all_zeros[:initial_fov] = 0
         # all_zeros[end_fov:] = 0
@@ -89,10 +91,12 @@ class ReactiveFollowGap(Node):
             temp[i] = np.mean(running_avg)
 
         proc_ranges = np.clip(proc_ranges, 0, 5)
-
-        # plt.plot(range(len(proc_ranges)), (proc_ranges), label="lidar proc")
-        # plt.legend()
+        plt.figure()
+        plt.plot(range(len(proc_ranges)), (proc_ranges), label="lidar proc")
+        plt.legend()
         # plt.show()
+
+        # proc_ranges = scan_data.ranges[initial_fov:end_fov] # TO REMOVE
 
         return proc_ranges.tolist()  # temp.tolist()
 
@@ -121,9 +125,10 @@ class ReactiveFollowGap(Node):
         self.get_logger().info(
             f"max_gap_start: {max_gap_start} max_gap_end:{max_gap_end}"
         )
-        # plt.axvline(x=max_gap_start, color='r', label='max_gap_start')
-        # plt.axvline(x=max_gap_end, color='r', label='max_gap_end')
-        # plt.legend()
+        #PLOT
+        plt.axvline(x=max_gap_start, color='r', label=f"max_gap_start i: {max_gap_start}")
+        plt.axvline(x=max_gap_end, color='r', label=f"max_gap_end i: {max_gap_end}")
+        plt.legend()
         # plt.show()
 
         return max_gap_start, max_gap_end
@@ -144,27 +149,32 @@ class ReactiveFollowGap(Node):
 
         central_index = max_value_indices[len(max_value_indices) // 2]
         # index = processed_ranges.index(max(processed_ranges[start_i:end_i]))
-
-        # plt.axvline(x=central_index, color='b', label=f"index to follow")
-        # plt.legend()
+        pre_proc_index = central_index
         central_index = central_index + int(
             self.__to_radians__(134 - self.fov_angle) / angle_increment
         )
 
         angle = -self.__to_radians__(134) + angle_increment * central_index
-        self.get_logger().info(f"angle: {angle*180/math.pi:.3f} ndex:{central_index}")
+        self.get_logger().info(f"angle: {angle*180/math.pi:.3f} index:{pre_proc_index}")
+
+        #PLOT
+        plt.axvline(
+            x=pre_proc_index,
+            color="b",
+            label=f"index to follow i:{pre_proc_index} angle: {angle*180/math.pi:.3f}",
+        )
+        plt.legend()
 
         return (
             angle,
-            central_index
-            - int(self.__to_radians__(134 - self.fov_angle) / angle_increment),
-            ranges[int(self.__to_radians__(134))],
+            pre_proc_index,
+            ranges[int(self.__to_radians__(134) / angle_increment)],
         )
 
     def find_disparities(self, ranges, angle_increment):
         """Find disparities in lidar readings and extend them to create a virtual lidar."""
-        car_width = 0.6
-        threshold = 0.25
+        car_width = 0.32
+        threshold = 0.2
 
         virtual_lidar = ranges[:]
 
@@ -174,8 +184,10 @@ class ReactiveFollowGap(Node):
 
             if abs(current_range - prev_range) > threshold:
                 # disparity_angle = math.acos(1 - (car_width**2) / (2 * max(current_range, prev_range)**2))
-
-                disparity_angle = math.atan2(car_width, current_range)
+                # disparity_angle = math.atan2(car_width, current_range)
+                
+                disparity_distance = current_range if current_range < prev_range else prev_range
+                disparity_angle = car_width/disparity_distance
                 disparity_angle_index = int(disparity_angle / angle_increment)
 
                 extend_direction = 1 if prev_range < current_range else -1
@@ -183,19 +195,28 @@ class ReactiveFollowGap(Node):
                 for j in range(disparity_angle_index + 1):
                     extend_index = i + j * extend_direction
                     if 0 <= extend_index < len(virtual_lidar):
-                        virtual_lidar[extend_index] = min(prev_range, current_range)
+                        virtual_lidar[extend_index] = min(prev_range, current_range, virtual_lidar[extend_index])
                         self.get_logger().info(
                             f"i:{i} cur:{current_range:.2f} prev:{prev_range:.2f} angle:{disparity_angle*180/math.pi:.3f} idic:{extend_direction} exti:{extend_index} range:{min(prev_range, current_range)}"
                         )
 
-        # plt.plot(range(len(virtual_lidar)), (virtual_lidar), label="virtual_lidar")
-        # plt.legend()
+        #PLOT
+        # initial_fov = int(
+        #     self.__to_radians__(134 - self.fov_angle) / angle_increment
+        # )
+        # end_fov = int(
+        #     self.__to_radians__(134 + self.fov_angle) / angle_increment
+        # )
+        # lidar_proc = np.pad(virtual_lidar, (initial_fov, end_fov), mode='constant', constant_values=0)
+        # plt.plot(range(len(lidar_proc)), (lidar_proc), label="virtual_lidar")
+        plt.plot(range(len(virtual_lidar)), (virtual_lidar), label="virtual_lidar")
+        plt.legend()
         # plt.show()
         return virtual_lidar
 
     def __speed_control__(self, forward_distance):
         """Controls the velocity based on the distance in front of the car"""
-        min_safe_distance = 1.0
+        min_safe_distance = 0.2
         full_speed_distance = 2.0
         max_speed = 1.5
         min_speed = 0.0
@@ -206,9 +227,9 @@ class ReactiveFollowGap(Node):
             speed = min_speed
         else:
             speed = min_speed + (max_speed - min_speed) * ((forward_distance - min_safe_distance) / (full_speed_distance - min_safe_distance))
-        
-        return speed
 
+        self.get_logger().info(f"speed:{speed} dist:{forward_distance:.2f}")
+        return speed
 
     def scan_callback(self, scan_data):
         """Process each LiDAR scan as per the Follow Gap algorithm & publish an AckermannDriveStamped Message"""
@@ -224,7 +245,7 @@ class ReactiveFollowGap(Node):
             start_i, end_i, ranges, scan_data.angle_increment, scan_data.ranges
         )
         # plt.show()
-        self.data_queue.put((proc_ranges, start_i, end_i, central_index, virtual_lidar))
+        # self.data_queue.put((proc_ranges, start_i, end_i, central_index, virtual_lidar))
 
         drive_msg = AckermannDriveStamped()
         drive_msg.drive.steering_angle = steering_angle
