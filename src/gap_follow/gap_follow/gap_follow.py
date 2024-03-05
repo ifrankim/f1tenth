@@ -52,7 +52,7 @@ class ReactiveFollowGap(Node):
 
         self.declare_parameters(
             namespace="",
-            parameters=[("should_plot", False), ("max_speed", 1.0)],
+            parameters=[("should_plot", False), ("max_speed", 1.0), ("car_width", 0.8), ("fov_angle", 70)],
         )
         self.should_plot = self.get_parameter("should_plot").value
 
@@ -62,7 +62,7 @@ class ReactiveFollowGap(Node):
         self.publisher = self.create_publisher(AckermannDriveStamped, "drive", 10)
         self.tf_broadcaster_ = tf2_ros.TransformBroadcaster(self)
 
-        self.fov_angle = 70
+        self.fov_angle = self.get_parameter("fov_angle").value
         self.current_st_angle = 0.0
 
         # PLOT
@@ -82,7 +82,7 @@ class ReactiveFollowGap(Node):
         #     plt.plot(
         #         range(len(scan_data.ranges)), (scan_data.ranges), label="lidar raw"
         #     )
-
+        self.fov_angle = self.get_parameter("fov_angle").value
         initial_fov = int(
             self.__to_radians__(134 - self.fov_angle) / scan_data.angle_increment
         )
@@ -155,7 +155,7 @@ class ReactiveFollowGap(Node):
         """Start_i & end_i are start and end indicies of max-gap range, respectively
         Return angle for the best point in processed_ranges
         """
-
+        self.fov_angle = self.get_parameter("fov_angle").value
         max_value = max(processed_ranges[start_i:end_i])
         max_value_indices = [
             i
@@ -190,7 +190,7 @@ class ReactiveFollowGap(Node):
 
     def find_disparities(self, ranges, angle_increment):
         """Find disparities in lidar readings and extend them to create a virtual lidar."""
-        car_width = 0.8
+        car_width = self.get_parameter("car_width").value
         threshold = 0.2
 
         virtual_lidar = ranges[:]
@@ -245,6 +245,7 @@ class ReactiveFollowGap(Node):
         """Handle rear obstacle detection based on LiDAR scan data.
         Detects obstacles behind the car to prevent collisions when turning.
         """
+        self.fov_angle = self.get_parameter("fov_angle").value
         initial_fov = int(
             self.__to_radians__(134 - self.fov_angle - 10) / scan_data.angle_increment
         )
