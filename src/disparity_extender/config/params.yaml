@@ -1,0 +1,5 @@
+disparity_extender:
+  ros__parameters:
+    max_speed: 2.0
+    car_width: 0.8
+    fov_angle: 70
