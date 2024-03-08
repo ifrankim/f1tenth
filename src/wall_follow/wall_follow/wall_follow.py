@@ -18,6 +18,19 @@ class WallFollowNode(Node):
         self.last_callback_time = time.time()
         self.prev_steering_angle = 0
 
+        self.declare_parameters(
+            namespace="",
+            parameters=[
+                ("look_ahead_distance", 12.5),
+                ("kp", 1.0),
+                ("ki", 0.0),
+                ("kd", 0.09),
+                ("desired_distance", 0.998),
+                ("a_angle", 10),
+                ("b_angle", 90),
+            ],
+        )
+
         self.subscription = self.create_subscription(
             LaserScan, "scan", self.scan_callback, 10
         )
@@ -33,12 +46,11 @@ class WallFollowNode(Node):
         if self.last_callback_time is not None:
             steering_angle = self.__steering_angle_control__(msg)
             speed = self.__speed_control__(steering_angle)
-            
-            # steering_angle = self.prev_steering_angle - steering_angle
+
             self.prev_steering_angle = steering_angle
-            
+
             # self.get_logger().info(f"angle: {steering_angle*180/math.pi:.3f}")
-            
+
             drive_msg = AckermannDriveStamped()
             drive_msg.drive.steering_angle = steering_angle
             drive_msg.drive.speed = speed
@@ -64,9 +76,11 @@ class WallFollowNode(Node):
         error = self.__get_error__(scan_data)
 
         steering_angle = self.__pid_control__(error, dt)
-        
-        self.get_logger().info(f"error:{error:.3f} angle: {steering_angle*180/math.pi:.3f}")
-        
+
+        self.get_logger().info(
+            f"error:{error:.3f} angle: {steering_angle*180/math.pi:.3f}"
+        )
+
         self.previous_error = error
         self.last_callback_time = current_time
 
@@ -85,41 +99,46 @@ class WallFollowNode(Node):
         ranges = scan_data.ranges
         angle_increment = scan_data.angle_increment
 
-        l = self.velocity_x * 0.2
+        l = self.get_parameter("look_ahead_distance").value  # self.velocity_x * 0.2
 
-        a_range = self.__get_range_index__(scan_data, 45)
-        b_range = self.__get_range_index__(scan_data, 90)
+        a_range = self.__get_range_index__(
+            scan_data, self.get_parameter("a_angle").value
+        )
+        b_range = self.__get_range_index__(
+            scan_data, self.get_parameter("a_angle").value
+        )
 
         a_distance = ranges[a_range]
         b_distance = ranges[b_range]
 
         theta = angle_increment * abs(a_range - b_range)
 
-        alpha = math.atan(
-            (a_distance * math.cos(theta) - b_distance) / a_distance * math.sin(theta)
+        alpha = math.atan2(
+            (a_distance * math.cos(theta) - b_distance), a_distance * math.sin(theta)
         )
 
         dt_distance = b_distance * math.cos(alpha)
-
 
         # middle_index = len(ranges) // 2
         # dt_distance = min(ranges[middle_index:])
         # alpha = math.acos(dt_distance/b_distance)
 
-        desired_distance = 1.45
+        desired_distance = self.get_parameter("desired_distance").value
         # self.get_logger().info(f"d:{dt_distance:.3f}")
 
-        dt_distance_1 = dt_distance + 12 * math.sin(alpha)
+        dt_distance_1 = dt_distance + l * math.sin(alpha)
         error = desired_distance - dt_distance_1
         # if (dt_distance > desired_distance): error *= -1
-        self.get_logger().info(f"e:{error:.3f}, dt:{dt_distance:.3f} desr:{desired_distance:.3f}")
+        self.get_logger().info(
+            f"e:{error:.3f}, dt:{dt_distance:.3f} desr:{desired_distance:.3f}"
+        )
 
         return error
 
     def __pid_control__(self, error, dt):
-        kp = 1
-        ki = 0
-        kd = 0.09
+        kp = self.get_parameter("kp").value
+        ki = self.get_parameter("ki").value
+        kd = self.get_parameter("kd").value
 
         pid_p = kp * error
         pid_d = kd * (error - self.previous_error)
@@ -127,11 +146,11 @@ class WallFollowNode(Node):
 
         steering_angle = pid_p + self.pid_i + pid_d
 
-        # if steering_angle > self.__to_radians__(90):
-        #     steering_angle = self.__to_radians__(90)
-        # if steering_angle < -self.__to_radians__(90):
-        #     steering_angle = -self.__to_radians__(90)
-        
+        if steering_angle > self.__to_radians__(90):
+            steering_angle = self.__to_radians__(90)
+        if steering_angle < -self.__to_radians__(90):
+            steering_angle = -self.__to_radians__(90)
+
         return -steering_angle
 
     def __to_radians__(self, angle):
