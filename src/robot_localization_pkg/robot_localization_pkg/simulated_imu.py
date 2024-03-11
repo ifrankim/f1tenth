@@ -17,7 +17,10 @@ class SimulatedImuNode(Node):
 
     def odom_callback(self, msg):
         imu_msg = Imu()
-
+        imu_msg.header = msg.header
+        
+        imu_msg.frame_id = "ego_racecar/base_link"
+        
         imu_msg.linear_acceleration.x = msg.twist.twist.linear.x
         imu_msg.linear_acceleration.y = msg.twist.twist.linear.y
         imu_msg.linear_acceleration.z = msg.twist.twist.linear.z

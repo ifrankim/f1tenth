@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>simulated_imu</name>
+  <name>robot_localization_pkg</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="rilbasestation02@todo.todo">rilbasestation02</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="fkgaieski@gmail.com">rilbasestation02</maintainer>
+  <license>Apache-2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
@@ -16,8 +16,10 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>ackermann_msgs</exec_depend>  
   <exec_depend>nav_msgs</exec_depend>  
-  <exec_depend>sensor_msgs</exec_depend>
-  <build_depend>sensor_msgs</build_depend>
+  <exec_depend>sensor_msgs</exec_depend>  
+  <build_depend>robot_localization</build_depend>
+  <exec_depend>robot_localization</exec_depend>
+
 
   <export>
     <build_type>ament_python</build_type>
