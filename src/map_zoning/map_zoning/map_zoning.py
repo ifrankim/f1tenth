@@ -25,7 +25,7 @@ class MapZoningNode(Node):
     def odom_callback(self, msg):
         velocity_x = msg.pose.pose.position
         color = self.get_color_at_position((velocity_x.x, velocity_x.y))
-        self.get_logger().info(f"AAAAAA {color}")
+        self.get_logger().info(f"{color}")
 
     def convert_position_to_pixel(self, image, car_position):
         pixel_scale = self.get_parameter("pixel_scale").value  # 1 px : 0.05 m
