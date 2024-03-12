@@ -1,0 +1,5 @@
+map_zoning:
+  ros__parameters:
+    image_path: "/home/rilbasestation02/sim_ws/src/f1tenth_gym_ros/maps/icra_2023_mod_color.jpeg"
+    car_origin: (10.049340820312501, 4.060702514648438)
+    pixel_scale: 0.05
