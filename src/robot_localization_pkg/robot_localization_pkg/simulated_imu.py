@@ -19,7 +19,7 @@ class SimulatedImuNode(Node):
         imu_msg = Imu()
         imu_msg.header = msg.header
         
-        imu_msg.frame_id = "ego_racecar/base_link"
+        imu_msg.header.frame_id = "ego_racecar/base_link"
         
         imu_msg.linear_acceleration.x = msg.twist.twist.linear.x
         imu_msg.linear_acceleration.y = msg.twist.twist.linear.y
