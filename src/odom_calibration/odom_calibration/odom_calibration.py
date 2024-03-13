@@ -15,14 +15,24 @@ class OdomCalibrationNode(Node):
             Odometry, "ego_racecar/odom", self.odom_callback, 10
         )
         self.csv_file = open("trajectory.csv", mode="w")
-        self.csv_writer = csv.writer(
-            self.csv_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
-        )
-        self.csv_writer.writerow(["x", "y", "z"])
+        # self.csv_writer = csv.writer(
+        #     self.csv_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        # )
+        # self.csv_writer.writerow(["x", "y", "z"])
+        self.publisher = self.create_publisher(AckermannDriveStamped, "drive", 10)
 
     def odom_callback(self, msg):
         position = msg.pose.pose.position
-        self.csv_writer.writerow([position.x, position.y, position.z])
+        self.distance_traveled = position.x
+
+    def move_straight(self):
+        speed = 0.0
+        if self.distance_traveled < 4.5:
+            speed = 1.2
+        drive_msg = AckermannDriveStamped()
+        drive_msg.drive.steering_angle = 0.0
+        drive_msg.drive.speed = speed
+        self.publisher.publish(drive_msg)
 
 
 def main(args=None):
